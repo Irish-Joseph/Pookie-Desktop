@@ -47,6 +47,7 @@ export default function App() {
   const [menu, setMenu] = useState(false);
   const [ready, setReady] = useState(false);
   const placed = useRef(false);
+  const autoSelected = useRef(false);
   const drag = useRef(false);
   const down = useRef<{ x: number; y: number } | null>(null);
   const busyRef = useRef<string | null>(null);
@@ -115,6 +116,13 @@ export default function App() {
     refresh(settings.endpoint);
   }, [settings.endpoint, refresh]);
   useEffect(() => {
+    if (!ready || autoSelected.current || settings.model || models.length === 0) return;
+    autoSelected.current = true;
+    const next = { ...settings, model: models[0].name };
+    setSettings(next);
+    native.saveSettings(next).catch((e) => setError(String(e)));
+  }, [ready, models, settings]);
+  useEffect(() => {
     const timer = window.setInterval(() => refresh(settings.endpoint), 30000);
     return () => clearInterval(timer);
   }, [settings.endpoint, refresh]);
@@ -173,6 +181,8 @@ export default function App() {
       if (!settings.model) {
         setError("Select an installed Ollama model in Settings.");
         setMood("confused");
+        setTab("settings");
+        setOpen(true);
       }
       return;
     }
@@ -211,7 +221,7 @@ export default function App() {
       return;
     }
     if (!models.find((m) => m.name === settings.model)?.vision) {
-      setError("Choose an installed vision-capable model before capturing.");
+      setError("Screen explanations need a vision-capable Ollama model. Your current model supports text chat only; choose a vision model in Settings.");
       setMood("confused");
       return;
     }
@@ -321,6 +331,11 @@ export default function App() {
                         Explain my screen
                       </button>
                     </div>
+                    {connected && !models.some((model) => model.vision) && (
+                      <p className="vision-hint">
+                        Text chat is ready. Screen explanations need a vision model installed in Ollama.
+                      </p>
+                    )}
                   </div>
                 )}
                 {messages.map((m, i) => (
@@ -413,6 +428,7 @@ export default function App() {
                 Your desktop companion runs locally with Ollama. Screen capture
                 starts only when you ask.
               </p>
+              {error && <p className="error" role="alert">{error}</p>}
               <label>
                 Ollama endpoint
                 <input
