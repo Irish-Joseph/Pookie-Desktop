@@ -12,7 +12,7 @@ export const native = {
     endpoint: string,
     messages: Message[],
     image?: string,
-  ) => invoke<void>("chat", { requestId, model, endpoint, messages, image }),
+  ) => invoke<string>("chat", { requestId, model, endpoint, messages, image }),
   cancel: (requestId: string) => invoke<void>("cancel_chat", { requestId }),
   capture: (mode: "window" | "screen") =>
     invoke<Capture>("capture_screen", { mode }),
@@ -22,6 +22,7 @@ export const native = {
     handler: (event: {
       requestId: string;
       delta?: string;
+      content?: string;
       error?: string;
       done?: boolean;
     }) => void,
@@ -29,6 +30,7 @@ export const native = {
     listen<{
       requestId: string;
       delta?: string;
+      content?: string;
       error?: string;
       done?: boolean;
     }>("chat-event", (e) => handler(e.payload)),

@@ -47,9 +47,11 @@ export default function App() {
   const [menu, setMenu] = useState(false);
   const [ready, setReady] = useState(false);
   const placed = useRef(false);
+  const autoSelected = useRef(false);
   const drag = useRef(false);
   const down = useRef<{ x: number; y: number } | null>(null);
   const busyRef = useRef<string | null>(null);
+  const activeRequestRef = useRef<string | null>(null);
   const messagesRef = useRef<Message[]>([]);
 
   useEffect(() => {
@@ -88,8 +90,15 @@ export default function App() {
   }, [open, ready]);
   useEffect(() => {
     let unlisten: (() => void) | undefined;
-    trackPosition().then((fn) => (unlisten = fn));
-    return () => unlisten?.();
+    let disposed = false;
+    trackPosition().then((fn) => {
+      if (disposed) void fn();
+      else unlisten = fn;
+    });
+    return () => {
+      disposed = true;
+      void unlisten?.();
+    };
   }, []);
   const refresh = useCallback(async (endpoint: string) => {
     try {
@@ -108,11 +117,19 @@ export default function App() {
     refresh(settings.endpoint);
   }, [settings.endpoint, refresh]);
   useEffect(() => {
+    if (!ready || autoSelected.current || settings.model || models.length === 0) return;
+    autoSelected.current = true;
+    const next = { ...settings, model: models[0].name };
+    setSettings(next);
+    native.saveSettings(next).catch((e) => setError(String(e)));
+  }, [ready, models, settings]);
+  useEffect(() => {
     const timer = window.setInterval(() => refresh(settings.endpoint), 30000);
     return () => clearInterval(timer);
   }, [settings.endpoint, refresh]);
   useEffect(() => {
     let unlisten: (() => void) | undefined;
+    let disposed = false;
     native
       .listen((e) => {
         if (e.requestId !== busyRef.current) return;
@@ -129,9 +146,22 @@ export default function App() {
             return next;
           });
         }
+        if (e.done && typeof e.content === "string") {
+          const finalContent = e.content;
+          setMessages((previous) => {
+            const next = [...previous];
+            const last = next.at(-1);
+            if (last?.role === "assistant")
+              next[next.length - 1] = { ...last, content: finalContent };
+            return next;
+          });
+        }
         if (e.error) {
           setError(e.error);
           setMood("error");
+          setMessages((previous) => previous.at(-1)?.role === "assistant" && !previous.at(-1)?.content
+            ? previous.slice(0, -1)
+            : previous);
         }
         if (e.done || e.error) {
           busyRef.current = null;
@@ -139,8 +169,14 @@ export default function App() {
           if (!e.error) setMood("happy");
         }
       })
-      .then((fn) => (unlisten = fn));
-    return () => unlisten?.();
+      .then((fn) => {
+        if (disposed) void fn();
+        else unlisten = fn;
+      });
+    return () => {
+      disposed = true;
+      void unlisten?.();
+    };
   }, []);
   useEffect(() => {
     messagesRef.current = messages;
@@ -159,6 +195,8 @@ export default function App() {
       if (!settings.model) {
         setError("Select an installed Ollama model in Settings.");
         setMood("confused");
+        setTab("settings");
+        setOpen(true);
       }
       return;
     }
@@ -172,18 +210,34 @@ export default function App() {
     setError("");
     setBusy(id);
     busyRef.current = id;
+    activeRequestRef.current = id;
     setMood(capture ? "processing" : "thinking");
     try {
-      await native.chat(
+      const answer = await native.chat(
         id,
         settings.model,
         settings.endpoint,
         history,
         capture?.image,
       );
+      if (!answer?.trim()) throw new Error("Ollama returned an empty reply.");
+      if (activeRequestRef.current === id) {
+        setMessages([...history, { role: "assistant", content: answer }]);
+        activeRequestRef.current = null;
+      }
       setCapture(null);
+      if (busyRef.current === id) {
+        busyRef.current = null;
+        setBusy(null);
+        setMood("happy");
+      }
     } catch (e) {
+      if (activeRequestRef.current !== id) return;
+      activeRequestRef.current = null;
       setError(String(e));
+      setMessages((previous) => previous[history.length]?.role === "assistant" && !previous[history.length]?.content
+        ? previous.filter((_, index) => index !== history.length)
+        : previous);
       setBusy(null);
       busyRef.current = null;
       setMood("error");
@@ -197,7 +251,7 @@ export default function App() {
       return;
     }
     if (!models.find((m) => m.name === settings.model)?.vision) {
-      setError("Choose an installed vision-capable model before capturing.");
+      setError("Screen explanations need a vision-capable Ollama model. Your current model supports text chat only; choose a vision model in Settings.");
       setMood("confused");
       return;
     }
@@ -206,6 +260,9 @@ export default function App() {
     try {
       const result = await native.capture(mode);
       setCapture(result);
+      setDraft((previous) => previous.trim() ? previous : mode === "screen"
+        ? "Briefly describe what is visible on my screen. If text is too small to read, say so."
+        : "Briefly describe this window and its key details. If text is too small to read, say so.");
       setOpen(true);
       setTab("chat");
       setMood("idle");
@@ -307,6 +364,11 @@ export default function App() {
                         Explain my screen
                       </button>
                     </div>
+                    {connected && !models.some((model) => model.vision) && (
+                      <p className="vision-hint">
+                        Text chat is ready. Screen explanations need a vision model installed in Ollama.
+                      </p>
+                    )}
                   </div>
                 )}
                 {messages.map((m, i) => (
@@ -378,6 +440,7 @@ export default function App() {
               <footer>
                 <button
                   onClick={() => {
+                    activeRequestRef.current = null;
                     setMessages([]);
                     setCapture(null);
                     localStorage.removeItem("pookie.chat");
@@ -399,6 +462,7 @@ export default function App() {
                 Your desktop companion runs locally with Ollama. Screen capture
                 starts only when you ask.
               </p>
+              {error && <p className="error" role="alert">{error}</p>}
               <label>
                 Ollama endpoint
                 <input
@@ -511,6 +575,7 @@ export default function App() {
               <button
                 className="secondary"
                 onClick={() => {
+                  activeRequestRef.current = null;
                   setMessages([]);
                   localStorage.removeItem("pookie.chat");
                 }}

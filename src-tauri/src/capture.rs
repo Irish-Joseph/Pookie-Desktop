@@ -29,6 +29,24 @@ pub fn take(mode: &str) -> Result<Capture, String> {
             "Primary monitor".into(),
         )
     };
+    // Bound visual tokens and transfer size on high resolution monitors.
+    // Keep smaller window captures at their original size for text clarity.
+    let (width, height) = image.dimensions();
+    let longest = width.max(height);
+    let area = width as f64 * height as f64;
+    let scale = (1280.0 / longest as f64)
+        .min((1_152_000.0 / area).sqrt())
+        .min(1.0);
+    let image = if scale < 1.0 {
+        image::imageops::resize(
+            &image,
+            (width as f64 * scale).round() as u32,
+            (height as f64 * scale).round() as u32,
+            image::imageops::FilterType::Lanczos3,
+        )
+    } else {
+        image
+    };
     let mut bytes = Cursor::new(Vec::new());
     image::DynamicImage::ImageRgba8(image)
         .write_to(&mut bytes, image::ImageFormat::Png)
