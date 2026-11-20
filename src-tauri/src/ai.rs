@@ -123,7 +123,7 @@ pub async fn stream_chat(
     messages: Vec<Message>,
     image: Option<String>,
     mut cancel: tokio::sync::oneshot::Receiver<()>,
-) -> Result<(), String> {
+) -> Result<String, String> {
     let base = validate_endpoint(endpoint)?;
     if messages
         .iter()
@@ -174,9 +174,10 @@ pub async fn stream_chat(
         .map_err(|e| e.to_string())?;
     let mut stream = response.bytes_stream();
     let mut buffer = Vec::new();
+    let mut answer = String::new();
     loop {
         tokio::select! {
-            _ = &mut cancel => { let _ = app.emit("chat-event", serde_json::json!({"requestId":request_id,"done":true})); return Ok(()); }
+            _ = &mut cancel => { let _ = app.emit("chat-event", serde_json::json!({"requestId":request_id,"done":true,"content":answer})); return Ok(answer); }
             item = stream.next() => match item {
                 Some(Ok(bytes)) => {
                     buffer.extend_from_slice(&bytes);
@@ -186,8 +187,8 @@ pub async fn stream_chat(
                         if line.iter().all(|b| b.is_ascii_whitespace()) { continue; }
                         let value: serde_json::Value = serde_json::from_slice(&line).map_err(|_| "Invalid Ollama stream")?;
                         if let Some(error) = value["error"].as_str() { return Err(error.into()); }
-                        if let Some(delta) = value["message"]["content"].as_str() { if !delta.is_empty() { let _ = app.emit("chat-event", serde_json::json!({"requestId":request_id,"delta":delta})); } }
-                        if value["done"] == true { let _ = app.emit("chat-event", serde_json::json!({"requestId":request_id,"done":true})); return Ok(()); }
+                        if let Some(delta) = value["message"]["content"].as_str() { if !delta.is_empty() { answer.push_str(delta); let _ = app.emit("chat-event", serde_json::json!({"requestId":request_id,"delta":delta})); } }
+                        if value["done"] == true { let _ = app.emit("chat-event", serde_json::json!({"requestId":request_id,"done":true,"content":answer})); return Ok(answer); }
                     }
                 },
                 Some(Err(e)) => return Err(e.to_string()),

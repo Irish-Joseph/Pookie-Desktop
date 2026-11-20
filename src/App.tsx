@@ -145,6 +145,16 @@ export default function App() {
             return next;
           });
         }
+        if (e.done && typeof e.content === "string") {
+          const finalContent = e.content;
+          setMessages((previous) => {
+            const next = [...previous];
+            const last = next.at(-1);
+            if (last?.role === "assistant")
+              next[next.length - 1] = { ...last, content: finalContent };
+            return next;
+          });
+        }
         if (e.error) {
           setError(e.error);
           setMood("error");
@@ -201,13 +211,19 @@ export default function App() {
     busyRef.current = id;
     setMood(capture ? "processing" : "thinking");
     try {
-      await native.chat(
+      const answer = await native.chat(
         id,
         settings.model,
         settings.endpoint,
         history,
         capture?.image,
       );
+      setMessages((previous) => {
+        if (previous[history.length - 1]?.role !== "user" || previous[history.length - 1]?.content !== content || previous[history.length]?.role !== "assistant") return previous;
+        const next = [...previous];
+        next[history.length] = { ...next[history.length], content: answer };
+        return next;
+      });
       setCapture(null);
     } catch (e) {
       setError(String(e));

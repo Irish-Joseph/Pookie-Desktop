@@ -32,7 +32,7 @@ async fn chat(
     endpoint: String,
     messages: Vec<ai::Message>,
     image: Option<String>,
-) -> Result<(), String> {
+) -> Result<String, String> {
     if request_id.len() > 100 || model.is_empty() || model.len() > 200 || messages.len() > 50 {
         return Err("Invalid chat request".into());
     }
