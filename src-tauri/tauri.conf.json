@@ -1,0 +1,9 @@
+{
+  "$schema":"https://schema.tauri.app/config/2",
+  "productName":"Pookie",
+  "version":"0.1.0",
+  "identifier":"dev.pookie.companion",
+  "build":{"beforeDevCommand":"npm run dev","devUrl":"http://127.0.0.1:1420","beforeBuildCommand":"npm run build","frontendDist":"../dist"},
+  "app":{"windows":[{"label":"main","title":"Pookie","width":180,"height":180,"minWidth":180,"minHeight":180,"transparent":true,"decorations":false,"alwaysOnTop":true,"resizable":false,"skipTaskbar":true}],"security":{"csp":"default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; connect-src 'self' http://127.0.0.1:1420 ws://127.0.0.1:1420; script-src 'self'"}},
+  "bundle":{"active":true,"targets":["nsis"],"icon":["icons/icon.png","icons/icon.ico"]}
+}
