@@ -175,9 +175,18 @@ pub async fn stream_chat(
     let mut stream = response.bytes_stream();
     let mut buffer = Vec::new();
     let mut answer = String::new();
+    let mut cancel_open = true;
     loop {
         tokio::select! {
-            _ = &mut cancel => { let _ = app.emit("chat-event", serde_json::json!({"requestId":request_id,"done":true,"content":answer})); return Ok(answer); }
+            signal = &mut cancel, if cancel_open => {
+                if signal.is_ok() {
+                    let _ = app.emit("chat-event", serde_json::json!({"requestId":request_id,"done":true,"content":answer}));
+                    return Ok(answer);
+                }
+                // A closed sender is not a user cancellation. Keep reading
+                // Ollama's response instead of silently returning an empty reply.
+                cancel_open = false;
+            }
             item = stream.next() => match item {
                 Some(Ok(bytes)) => {
                     buffer.extend_from_slice(&bytes);
@@ -188,7 +197,13 @@ pub async fn stream_chat(
                         let value: serde_json::Value = serde_json::from_slice(&line).map_err(|_| "Invalid Ollama stream")?;
                         if let Some(error) = value["error"].as_str() { return Err(error.into()); }
                         if let Some(delta) = value["message"]["content"].as_str() { if !delta.is_empty() { answer.push_str(delta); let _ = app.emit("chat-event", serde_json::json!({"requestId":request_id,"delta":delta})); } }
-                        if value["done"] == true { let _ = app.emit("chat-event", serde_json::json!({"requestId":request_id,"done":true,"content":answer})); return Ok(answer); }
+                        if value["done"] == true {
+                            if answer.trim().is_empty() {
+                                return Err("Ollama returned an empty reply. Try another model or question.".into());
+                            }
+                            let _ = app.emit("chat-event", serde_json::json!({"requestId":request_id,"done":true,"content":answer}));
+                            return Ok(answer);
+                        }
                     }
                 },
                 Some(Err(e)) => return Err(e.to_string()),

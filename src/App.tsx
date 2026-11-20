@@ -232,6 +232,9 @@ export default function App() {
       }
     } catch (e) {
       setError(String(e));
+      setMessages((previous) => previous[history.length]?.role === "assistant" && !previous[history.length]?.content
+        ? previous.filter((_, index) => index !== history.length)
+        : previous);
       setBusy(null);
       busyRef.current = null;
       setMood("error");
