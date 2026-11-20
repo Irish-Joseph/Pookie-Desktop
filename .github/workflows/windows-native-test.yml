@@ -1,6 +1,7 @@
 name: Windows native test build
 
 on:
+  push:
   pull_request:
   workflow_dispatch:
 
