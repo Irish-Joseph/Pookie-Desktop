@@ -159,7 +159,14 @@ pub async fn stream_chat(
         payload.insert(0, serde_json::json!({"role":"system","content":"You are Pookie, a helpful local desktop assistant. Answer the latest question directly and concisely. If you are unsure, say so instead of inventing details."}));
     }
     let url = base.join("api/chat").map_err(|e| e.to_string())?;
-    let request = serde_json::json!({"model":model,"messages":payload,"stream":true,"think":false,"keep_alive":"10m","options":{"num_predict": if has_image { 256 } else { 384 }}});
+    let options = if has_image {
+        // A bounded capture and one current question fit in this context.
+        // On small GPUs, a larger KV cache can push vision layers onto CPU.
+        serde_json::json!({"num_predict":256,"num_ctx":2048})
+    } else {
+        serde_json::json!({"num_predict":384})
+    };
+    let request = serde_json::json!({"model":model,"messages":payload,"stream":true,"think":false,"keep_alive":"10m","options":options});
     let response = client(crate::storage::load()?.timeout as u64)?
         .post(url)
         .json(&request)

@@ -33,8 +33,11 @@ pub fn take(mode: &str) -> Result<Capture, String> {
     // Keep smaller window captures at their original size for text clarity.
     let (width, height) = image.dimensions();
     let longest = width.max(height);
-    let image = if longest > 1280 {
-        let scale = 1280.0 / longest as f64;
+    let area = width as f64 * height as f64;
+    let scale = (1280.0 / longest as f64)
+        .min((1_152_000.0 / area).sqrt())
+        .min(1.0);
+    let image = if scale < 1.0 {
         image::imageops::resize(
             &image,
             (width as f64 * scale).round() as u32,

@@ -8,7 +8,13 @@ The mascot uses a transparent pose atlas derived from the approved Pookie charac
 
 ## Screenshots
 
-These screenshots are from a browser integration test of the Pookie interface against a real, locally running Ollama instance. The test used a temporary Tauri command bridge; they are **not screenshots of the native desktop overlay**.
+The first two images are cropped from the running **native Windows Tauri overlay**. They show the actual desktop panel and its local Ollama settings.
+
+| Native desktop chat | Native settings |
+| --- | --- |
+| ![Native Pookie Windows desktop chat overlay](docs/screenshots/native-overlay.png) | ![Native Pookie settings with loopback Ollama endpoint and vision model](docs/screenshots/native-settings.png) |
+
+The following images are from a browser integration test of the same Pookie interface against a real, locally running Ollama instance. The test used a temporary Tauri command bridge; these are **not native desktop screenshots**.
 
 | Connected to local Ollama | Live model reply |
 | --- | --- |
