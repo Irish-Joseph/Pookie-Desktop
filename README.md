@@ -14,7 +14,7 @@ These screenshots are from a browser integration test of the Pookie interface ag
 | --- | --- |
 | ![Pookie Settings showing a local Ollama endpoint and qwen2.5:0.5b model](docs/screenshots/connected-settings.png) | ![Pookie chat showing the model reply, Pookie is running locally](docs/screenshots/live-response.png) |
 
-The reply was streamed from `qwen2.5:0.5b`, which is a small text-only model. Screen capture needs a separate installed model with vision capability.
+The reply was streamed from `qwen2.5:0.5b`, which is a small text-only model. Screen capture needs a separate installed model with vision capability. A compact option is `qwen3.5:2b-q4_K_M` (about 1.9 GB to download).
 
 ## Current status
 
@@ -49,7 +49,13 @@ See the [Tauri Windows prerequisites](https://v2.tauri.app/start/prerequisites/#
    npm run tauri dev
    ```
 
-3. In Pookie's Settings, keep the default endpoint `http://127.0.0.1:11434`, select **Test connection**, choose `qwen2.5:0.5b`, and send a chat message. The model is for text chat; to explain a screen capture, install and select a model that Pookie identifies as vision-capable, then enable screen capture in Settings.
+3. In Pookie's Settings, keep the default endpoint `http://127.0.0.1:11434`, select **Test connection**, choose `qwen2.5:0.5b`, and send a chat message. This model handles text only. To explain the screen, install a small vision model:
+
+   ```powershell
+   ollama pull qwen3.5:2b-q4_K_M
+   ```
+
+   Select `qwen3.5:2b-q4_K_M` in Pookie's Settings, enable screen capture, and use **Explain my screen** or **Explain a window**. Pookie previews the capture before sending it to local Ollama. On a CPU-only machine, allow up to two minutes for the first answer in **Response timeout**.
 
 Pookie does not install or start Ollama, or download models. If Ollama runs in Docker, expose its API on the same loopback address so Pookie can reach it.
 
@@ -76,7 +82,7 @@ Only numeric loopback Ollama endpoints are accepted. The Rust HTTP client disabl
 - Cloud providers, keychain storage, voice, guidance overlays, configurable shortcuts, and full conversation management are not implemented.
 - The transparent window is resized with the chat panel; native hit testing of every transparent pixel has not been verified.
 - Elevated applications, secure desktops, DRM content, and some fullscreen software may prevent capture.
-- The browser UI has been tested against live Ollama, and the native Windows window has been launched. Native chat, tray, drag, capture, and installer behavior still need manual Windows verification.
+- The browser UI and native Windows chat and primary-monitor capture have been tested against live Ollama. Tray, drag, active-window capture, and installer behavior still need manual Windows verification. Small vision models can misread dense desktop text.
 
 See [contributing](CONTRIBUTING.md) and [security](SECURITY.md).
 
