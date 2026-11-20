@@ -6,28 +6,52 @@ Pookie is an experimental, local-first desktop companion. It floats above your W
 
 The mascot uses a transparent pose atlas derived from the approved Pookie character reference, with lightweight CSS motion and event-driven expressions. See [character animation](docs/character-animation.md) for its states and asset workflow.
 
+## Screenshots
+
+These screenshots are from a browser integration test of the Pookie interface against a real, locally running Ollama instance. The test used a temporary Tauri command bridge; they are **not screenshots of the native desktop overlay**.
+
+| Connected to local Ollama | Live model reply |
+| --- | --- |
+| ![Pookie Settings showing a local Ollama endpoint and qwen2.5:0.5b model](docs/screenshots/connected-settings.png) | ![Pookie chat showing the model reply, Pookie is running locally](docs/screenshots/live-response.png) |
+
+The reply was streamed from `qwen2.5:0.5b`, which is a small text-only model. Screen capture needs a separate installed model with vision capability.
+
 ## Current status
 
-This repository is an early working implementation, **not a finished release**. The React production build passes. Native compilation and live desktop behavior have not yet been verified on the development machine because Visual C++ Build Tools are missing. See [development notes](docs/development.md) and [limitations](#limitations).
+This repository is an early working implementation, **not a finished release**. The React production build and browser integration test with live Ollama pass. Native compilation and live desktop behavior have not yet been verified on the development machine because Visual C++ Build Tools are missing. See [development notes](docs/development.md) and [limitations](#limitations).
 
 ## Requirements
 
-- Windows 10 or 11, with WebView2
+- Windows 10 or 11, with Microsoft Edge WebView2
 - Node.js 22 or later and npm
-- Rust stable with the MSVC target
-- Visual Studio 2022 Build Tools with **Desktop development with C++**
-- [Ollama](https://ollama.com/download) for local AI
+- [Rust](https://www.rust-lang.org/tools/install) stable with the MSVC target (`rustup default stable-x86_64-pc-windows-msvc` on 64-bit Windows)
+- [Microsoft C++ Build Tools](https://v2.tauri.app/start/prerequisites/#microsoft-c-build-tools) with **Desktop development with C++** selected in the installer
+- [Ollama for Windows](https://ollama.com/download/windows) for local AI
+
+See the [Tauri Windows prerequisites](https://v2.tauri.app/start/prerequisites/#windows) for WebView2 and compiler setup. Install these once before running the commands below. The C++ workload is required to compile the native app.
 
 ## Run locally
 
-```powershell
-cd D:\Pooki
-npm ci
-ollama pull gemma3
-npm run tauri dev
-```
+1. Install and start Ollama. In PowerShell, download a small chat model and confirm that Ollama is responding:
 
-Select an installed model in Settings. Ollama defaults to `http://127.0.0.1:11434`. The model name above is an example; you can use any installed text model for chat and a model reporting `vision` capability for screen explanations. Pookie does not install Ollama or download models for you.
+   ```powershell
+   ollama pull qwen2.5:0.5b
+   ollama list
+   Invoke-RestMethod http://127.0.0.1:11434/api/version
+   ```
+
+2. Clone and launch Pookie in a new PowerShell window:
+
+   ```powershell
+   git clone https://github.com/Irish-Joseph/Pookie-Desktop.git
+   cd Pookie-Desktop
+   npm ci
+   npm run tauri dev
+   ```
+
+3. In Pookie's Settings, keep the default endpoint `http://127.0.0.1:11434`, select **Test connection**, choose `qwen2.5:0.5b`, and send a chat message. The model is for text chat; to explain a screen capture, install and select a model that Pookie identifies as vision-capable, then enable screen capture in Settings.
+
+Pookie does not install or start Ollama, or download models. If Ollama runs in Docker, expose its API on the same loopback address so Pookie can reach it.
 
 ## Build
 
@@ -52,7 +76,7 @@ Only numeric loopback Ollama endpoints are accepted. The Rust HTTP client disabl
 - Cloud providers, keychain storage, voice, guidance overlays, configurable shortcuts, and full conversation management are not implemented.
 - The transparent window is resized with the chat panel; native hit testing of every transparent pixel has not been verified.
 - Elevated applications, secure desktops, DRM content, and some fullscreen software may prevent capture.
-- Live Ollama, tray, drag, capture, and installer behavior still need manual Windows verification.
+- The browser UI has been tested against live Ollama. The native overlay, tray, drag, capture, and installer behavior still need manual Windows verification.
 
 See [contributing](CONTRIBUTING.md) and [security](SECURITY.md).
 
