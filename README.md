@@ -18,7 +18,7 @@ The reply was streamed from `qwen2.5:0.5b`, which is a small text-only model. Sc
 
 ## Current status
 
-This repository is an early working implementation, **not a finished release**. The React production build and browser integration test with live Ollama pass. Native compilation and live desktop behavior have not yet been verified on the development machine because Visual C++ Build Tools are missing. See [development notes](docs/development.md) and [limitations](#limitations).
+This repository is an early working implementation, **not a finished release**. The React production build and browser integration test with live Ollama pass. A native Windows executable was built in GitHub Actions and launched locally as a visible, responsive Tauri window. The full manual Windows checklist is still pending. See [development notes](docs/development.md) and [limitations](#limitations).
 
 ## Requirements
 
@@ -76,7 +76,7 @@ Only numeric loopback Ollama endpoints are accepted. The Rust HTTP client disabl
 - Cloud providers, keychain storage, voice, guidance overlays, configurable shortcuts, and full conversation management are not implemented.
 - The transparent window is resized with the chat panel; native hit testing of every transparent pixel has not been verified.
 - Elevated applications, secure desktops, DRM content, and some fullscreen software may prevent capture.
-- The browser UI has been tested against live Ollama. The native overlay, tray, drag, capture, and installer behavior still need manual Windows verification.
+- The browser UI has been tested against live Ollama, and the native Windows window has been launched. Native chat, tray, drag, capture, and installer behavior still need manual Windows verification.
 
 See [contributing](CONTRIBUTING.md) and [security](SECURITY.md).
 
