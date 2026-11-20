@@ -83,11 +83,9 @@ async fn capture_screen(app: tauri::AppHandle, mode: String) -> Result<capture::
         .ok_or("Pookie window unavailable")?;
     window.hide().map_err(|e| e.to_string())?;
     tokio::time::sleep(std::time::Duration::from_millis(700)).await;
-    let result = tauri::async_runtime::spawn_blocking(move || capture::take(&mode))
-        .await
-        .map_err(|e| e.to_string())?;
+    let result = tauri::async_runtime::spawn_blocking(move || capture::take(&mode)).await;
     let _ = window.show();
-    result
+    result.map_err(|e| e.to_string())?
 }
 
 #[tauri::command]

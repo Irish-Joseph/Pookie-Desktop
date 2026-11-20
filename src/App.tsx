@@ -148,6 +148,9 @@ export default function App() {
         if (e.error) {
           setError(e.error);
           setMood("error");
+          setMessages((previous) => previous.at(-1)?.role === "assistant" && !previous.at(-1)?.content
+            ? previous.slice(0, -1)
+            : previous);
         }
         if (e.done || e.error) {
           busyRef.current = null;
@@ -230,6 +233,9 @@ export default function App() {
     try {
       const result = await native.capture(mode);
       setCapture(result);
+      setDraft((previous) => previous.trim() ? previous : mode === "screen"
+        ? "Briefly describe what is visible on my screen. If text is too small to read, say so."
+        : "Briefly describe this window and its key details. If text is too small to read, say so.");
       setOpen(true);
       setTab("chat");
       setMood("idle");
