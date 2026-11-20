@@ -1,6 +1,6 @@
 # Pookie Instagram carousel draft
 
-Use `pookie-instagram-01.png` and `pookie-instagram-02.png` in that order. Both are 1080 × 1350 pixels. The interface panels were cropped from the running native Windows Tauri app; the mascot is the project's approved character asset. The images are presentation graphics, not a claim of a finished product.
+Use `pookie-instagram-01.png`, `pookie-instagram-02.png`, and `pookie-instagram-03.png` in that order. All are 1080 × 1350 pixels. The interface panels were cropped from the running native Windows Tauri app; the mascot is the project's approved character asset. Slide 3 shows a real local vision reply to a controlled Notepad test window. The images are presentation graphics, not a claim of a finished product.
 
 ## Caption
 
@@ -18,3 +18,4 @@ Code and local setup: github.com/Irish-Joseph/Pookie-Desktop
 
 1. Purple graphic introducing Pookie, a friendly lavender robot, beside a real screenshot of the native Windows chat overlay.
 2. Lavender graphic showing Pookie beside a real screenshot of the native settings panel with a local Ollama endpoint and model selector.
+3. Dark purple graphic with a real native Pookie chat screenshot: a question about a Notepad window's secret code and the local vision model's answer, BLUE-42.

@@ -14,6 +14,10 @@ The first two images are cropped from the running **native Windows Tauri overlay
 | --- | --- |
 | ![Native Pookie Windows desktop chat overlay](docs/screenshots/native-overlay.png) | ![Native Pookie settings with loopback Ollama endpoint and vision model](docs/screenshots/native-settings.png) |
 
+In a controlled Notepad test, the native overlay captured the active window and the local vision model correctly read `BLUE-42`:
+
+![Native Pookie vision reply to a captured Notepad window](docs/screenshots/native-vision-response.png)
+
 The following images are from a browser integration test of the same Pookie interface against a real, locally running Ollama instance. The test used a temporary Tauri command bridge; these are **not native desktop screenshots**.
 
 | Connected to local Ollama | Live model reply |
