@@ -1,0 +1,30 @@
+name: Windows native test build
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-2022
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install JavaScript dependencies
+        run: npm ci
+      - name: Check frontend
+        run: npm run check
+      - name: Test frontend
+        run: npm test
+      - name: Build native Windows executable
+        run: npm run tauri -- build --no-bundle --ci
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pookie-windows-native-${{ github.sha }}
+          path: src-tauri/target/release/pookie.exe
+          if-no-files-found: error
