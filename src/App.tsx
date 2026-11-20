@@ -225,6 +225,11 @@ export default function App() {
         return next;
       });
       setCapture(null);
+      if (busyRef.current === id) {
+        busyRef.current = null;
+        setBusy(null);
+        setMood("happy");
+      }
     } catch (e) {
       setError(String(e));
       setBusy(null);
