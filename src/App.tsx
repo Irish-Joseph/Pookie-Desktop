@@ -88,8 +88,15 @@ export default function App() {
   }, [open, ready]);
   useEffect(() => {
     let unlisten: (() => void) | undefined;
-    trackPosition().then((fn) => (unlisten = fn));
-    return () => unlisten?.();
+    let disposed = false;
+    trackPosition().then((fn) => {
+      if (disposed) void fn();
+      else unlisten = fn;
+    });
+    return () => {
+      disposed = true;
+      void unlisten?.();
+    };
   }, []);
   const refresh = useCallback(async (endpoint: string) => {
     try {
@@ -113,6 +120,7 @@ export default function App() {
   }, [settings.endpoint, refresh]);
   useEffect(() => {
     let unlisten: (() => void) | undefined;
+    let disposed = false;
     native
       .listen((e) => {
         if (e.requestId !== busyRef.current) return;
@@ -139,8 +147,14 @@ export default function App() {
           if (!e.error) setMood("happy");
         }
       })
-      .then((fn) => (unlisten = fn));
-    return () => unlisten?.();
+      .then((fn) => {
+        if (disposed) void fn();
+        else unlisten = fn;
+      });
+    return () => {
+      disposed = true;
+      void unlisten?.();
+    };
   }, []);
   useEffect(() => {
     messagesRef.current = messages;
