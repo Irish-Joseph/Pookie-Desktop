@@ -103,7 +103,7 @@ Only numeric loopback Ollama endpoints are accepted. The Rust HTTP client disabl
 - Cloud providers, keychain storage, voice, guidance overlays, configurable shortcuts, and full conversation management are not implemented.
 - The transparent window is resized with the chat panel; native hit testing of every transparent pixel has not been verified.
 - Elevated applications, secure desktops, DRM content, and some fullscreen software may prevent capture.
-- The browser UI and native Windows chat and primary-monitor capture have been tested against live Ollama. Tray, drag, active-window capture, and installer behavior still need manual Windows verification. Small vision models can misread dense desktop text; neither speed nor accuracy is guaranteed on all hardware.
+- The browser UI and native Windows text chat, active-window capture, and primary-monitor capture have been tested against live Ollama. Tray, drag, and installer behavior still need manual Windows verification. Small vision models can misread dense desktop text; neither speed nor accuracy is guaranteed on all hardware.
 
 See [contributing](CONTRIBUTING.md) and [security](SECURITY.md).
 
