@@ -51,6 +51,7 @@ export default function App() {
   const drag = useRef(false);
   const down = useRef<{ x: number; y: number } | null>(null);
   const busyRef = useRef<string | null>(null);
+  const activeRequestRef = useRef<string | null>(null);
   const messagesRef = useRef<Message[]>([]);
 
   useEffect(() => {
@@ -209,6 +210,7 @@ export default function App() {
     setError("");
     setBusy(id);
     busyRef.current = id;
+    activeRequestRef.current = id;
     setMood(capture ? "processing" : "thinking");
     try {
       const answer = await native.chat(
@@ -218,12 +220,11 @@ export default function App() {
         history,
         capture?.image,
       );
-      setMessages((previous) => {
-        if (previous[history.length - 1]?.role !== "user" || previous[history.length - 1]?.content !== content || previous[history.length]?.role !== "assistant") return previous;
-        const next = [...previous];
-        next[history.length] = { ...next[history.length], content: answer };
-        return next;
-      });
+      if (!answer?.trim()) throw new Error("Ollama returned an empty reply.");
+      if (activeRequestRef.current === id) {
+        setMessages([...history, { role: "assistant", content: answer }]);
+        activeRequestRef.current = null;
+      }
       setCapture(null);
       if (busyRef.current === id) {
         busyRef.current = null;
@@ -231,6 +232,8 @@ export default function App() {
         setMood("happy");
       }
     } catch (e) {
+      if (activeRequestRef.current !== id) return;
+      activeRequestRef.current = null;
       setError(String(e));
       setMessages((previous) => previous[history.length]?.role === "assistant" && !previous[history.length]?.content
         ? previous.filter((_, index) => index !== history.length)
@@ -437,6 +440,7 @@ export default function App() {
               <footer>
                 <button
                   onClick={() => {
+                    activeRequestRef.current = null;
                     setMessages([]);
                     setCapture(null);
                     localStorage.removeItem("pookie.chat");
@@ -571,6 +575,7 @@ export default function App() {
               <button
                 className="secondary"
                 onClick={() => {
+                  activeRequestRef.current = null;
                   setMessages([]);
                   localStorage.removeItem("pookie.chat");
                 }}
